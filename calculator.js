@@ -94,7 +94,7 @@ function evaluate(str){
     return result;
 }
 
-function tests(){
+function tests(options={}){
     let tests = [
         // Test + and -
         { input: "1+2+3-2-1", output: 3},
@@ -113,25 +113,71 @@ function tests(){
         { input: "3+5/5", output: 4 },
         // Test fractions
         { input: "3/5 + 1", output: 1.6 },
+        // General test
+        {input: "5-1-1+(3*7)/14/8", output: 3.1875},
         // Test parens
         // { input: "(1+3/(2*2))*5", output: 8.75 }
-        {input: "5-1-1+(3*7)/14/8", output: 3.1875}
     ];
     tests.forEach((test)=>{
-        console.log("evaluating:", test.input);
+        if(!options.quiet){
+          console.log("evaluating:", test.input);
+        }
         let actual = evaluate(test.input),
             expected = test.output;
         assert.equal(actual, expected);
-        console.log("  passed with: ", expected, "==", actual);
+        if(!options.quiet){
+            console.log("  passed with: ", expected, "==", actual);
+        }
     });
 }
 
-tests();
-// console.log(evaluate("1+2+3"));
-// console.log(evaluate("1+2+3-2"));
-// console.log(evaluate("1+2+3-2-1"));
+let str = '((()()))';
+function matching_parens(str, open_paren_pos){
+    let balance = 0;
+    if(str[open_paren_pos] == '('){
+        balance += 1;
+    }else{
+        return -1;
+    }
+    for(let i=open_paren_pos+1; i<str.length; i++){
+        let char = str[i];
+        if (char == '('){
+            balance += 1;
+        }else if(char == ')'){
+            balance -= 1;
+        }
+        if (balance==0){
+            return i;
+        }
+    }
+    return -1;
+}
+function test_matching_parens(){
+    let tests = [
+        { input: ['()', 0], output: 1},
+        { input: ['()', 1], output: -1},
+        { input: ['()()', 2], output: 3},
+        { input: ['(())', 0], output: 3},
+        { input: ['(())', 1], output: 2},
+        { input: ['((())', 0], output: -1},
+    ];
+    tests.forEach((test)=>{
+        assert.equal(matching_parens(...test.input), test.output);
+    });
+}
 
-// let test_ast = {};
-// build_ast(test_ast, "5-1-1");
-// console.log(test_ast);
+test_matching_parens();
+tests({quiet: true});
 
+function recurse_on_parens(str){
+    let open_paren_match = /\(/.exec(str);
+    if(open_paren_match){
+        let open_paren_pos = open_paren_match.index,
+            close_paren_pos = matching_parens(str, open_paren_pos),
+            substr = str.slice(open_paren_pos, close_paren_pos+1),
+            inside_parens_substr = substr.slice(1, substr.length);
+        console.log(substr);
+        recurse_on_parens(inside_parens_substr);
+    }
+}
+recurse_on_parens("(())");
