@@ -85,7 +85,7 @@ function eval_ast(root){
     }
 }
 
-function evaluate(str){
+function evaluate_flat_expression(str){
     let ast = {},
         result;
     str=format_str(str);
@@ -104,6 +104,7 @@ function tests(options={}){
         { input: "555", output: 555},
         { input: "5-1", output: 4},
         { input: "5-1-1", output: 3},
+        { input: "5-0+6", output: 11},
         { input: "-555", output: -555},
         { input: "-555-100-10-1", output: -666},
         // Test mult
@@ -175,9 +176,22 @@ function recurse_on_parens(str){
         let open_paren_pos = open_paren_match.index,
             close_paren_pos = matching_parens(str, open_paren_pos),
             substr = str.slice(open_paren_pos, close_paren_pos+1),
-            inside_parens_substr = substr.slice(1, substr.length);
-        console.log(substr);
-        recurse_on_parens(inside_parens_substr);
+            inside_parens_substr = substr.slice(1, substr.length-1);
+        // evaluate the sub-exp & splice the result into the outer expression
+        let result = recurse_on_parens(inside_parens_substr);
+        return str.slice(0, open_paren_pos) + result + str.slice(close_paren_pos+1);
+    }else{
+        return evaluate_flat_expression(str);
     }
 }
-recurse_on_parens("(())");
+
+function evaluate(expression){
+    while(expression.indexOf('(') != -1){
+        expression = recurse_on_parens(expression);
+    }
+    expression = recurse_on_parens(expression);
+    return expression;
+}
+
+let expression = "(5-(1-1)+(3*2))";
+console.log(evaluate(expression));
