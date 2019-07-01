@@ -117,7 +117,7 @@ function tests(options={}){
         // General test
         {input: "5-1-1+(3*7)/14/8", output: 3.1875},
         // Test parens
-        // { input: "(1+3/(2*2))*5", output: 8.75 }
+        {input: "(5-(1-1)+(3*2))", output: 11},
     ];
     tests.forEach((test)=>{
         if(!options.quiet){
@@ -193,5 +193,13 @@ function evaluate(expression){
     return expression;
 }
 
-let expression = "(5-(1-1)+(3*2))";
-console.log(evaluate(expression));
+function accept_user_input(){
+  process.stdin.resume();
+  process.stdin.setEncoding('utf8');
+  console.log("Please type in your formula and press enter:")
+  process.stdin.on('data', function (chunk) {
+    console.log(evaluate(chunk));
+    console.log("\nPlease type in your formula and press enter:")
+  });
+}
+accept_user_input();
